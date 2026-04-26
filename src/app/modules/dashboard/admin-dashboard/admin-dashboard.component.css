@@ -1,0 +1,22 @@
+/* Tailwind directives */
+@import "tailwindcss/preflight";
+@tailwind utilities;
+
+/* Custom styles (if needed) */
+.h-64 {
+  min-height: 16rem;
+}
+
+/* Animation for refresh button */
+.refresh-animation {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,17 @@
+.bg-container {
+  background-image: url('/images/fondo_login.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  position: relative;
+  z-index: 0;
+}
+
+.bg-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(154, 183, 229, 0.5); /* Más claro para resaltar la caja */
+  z-index: -1;
+}

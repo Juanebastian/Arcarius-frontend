@@ -1,0 +1,201 @@
+<div class="p-4 bg-white rounded-2xl shadow-xl relative">
+  <!-- Header -->
+  <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M5.121 17.804A4 4 0 016 14.118V11a4 4 0 114 0v3.118a4 4 0 01.879 3.686m-4.758 0a4 4 0 007.758 0" />
+      </svg>
+      Lista de Usuarios
+    </div>
+    <div class="flex items-center gap-4">
+      <p class="text-sm text-gray-600">
+        Total de usuarios: {{ usuarios.length }}
+      </p>
+      <button (click)="abrirFormulario()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm rounded-md transition duration-200">
+        + Nuevo Usuario
+      </button>
+    </div>
+  </h2>
+
+  <!-- Estados -->
+  <div *ngIf="cargando" class="flex items-center gap-2 text-blue-600 font-medium">
+    <span class="animate-spin h-5 w-5 border-4 border-blue-300 border-t-transparent rounded-full"></span>
+    Cargando usuarios...
+  </div>
+  <div *ngIf="error" class="text-red-600 font-semibold mb-4">{{ error }}</div>
+
+  <!-- 🔍 Search + Filtros -->
+  <div class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6">
+    <!-- Search -->
+    <div class="relative w-full max-w-md">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+      <input 
+        type="text" 
+        placeholder="Buscar usuarios..."
+        [(ngModel)]="filtroTexto"
+        (input)="onFiltroChange()"
+        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:shadow-lg focus:scale-105 transition-all duration-200 text-sm placeholder-gray-400">
+    </div>
+
+
+      <div class="flex flex-wrap gap-3">
+  <label *ngFor="let rol of roles" class="inline-flex items-center gap-2">
+    <input type="checkbox"
+           [value]="rol.id"
+           (change)="onCheckboxChange($event, rol.id)"
+           [checked]="rolesSeleccionados.includes(rol.id)"
+           class="form-checkbox text-blue-600">
+    {{ rol.nombre }}
+  </label>
+</div>
+
+  </div>
+
+  <!-- 📋 Tabla -->
+  <div *ngIf="!cargando && usuariosFiltrados.length" class="overflow-x-auto">
+    <table class="w-full text-left border-collapse shadow-sm rounded-xl overflow-hidden">
+      <thead class="bg-blue-100 text-blue-800 text-sm uppercase tracking-wider">
+        <tr>
+          <th class="px-6 py-3">ID</th>
+          <th class="px-6 py-3">Nombre</th>
+          <th class="px-6 py-3">Cédula</th>
+          <th class="px-6 py-3">Correo</th>
+          <th class="px-6 py-3">Teléfono</th>
+          <th class="px-6 py-3">Rol</th>
+          <th class="px-6 py-3">Estado</th>
+          <th class="px-6 py-3 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let usuario of usuariosPagina; let i = index"
+            class="odd:bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors duration-200">
+          <td class="px-6 py-3">{{ usuario.id }}</td>
+          <td class="px-6 py-3 truncate max-w-xs">{{ usuario.nombre_completo }}</td>
+          <td class="px-6 py-3">{{ usuario.documento }}</td>
+          <td class="px-6 py-3">{{ usuario.email }}</td>
+          <td class="px-6 py-3">{{ usuario.telefono }}</td>
+          <td class="px-6 py-3">{{ getNombreRol(usuario.rol_id) }}</td>
+          <td class="px-6 py-3">
+            <span [ngClass]="usuario.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                  class="px-3 py-1 rounded-full text-xs font-semibold">
+              {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="px-6 py-3 text-center">
+            <button (click)="editarUsuario(usuario)"
+                    class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">
+              Editar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 📄 Paginación -->
+    <div class="flex justify-between items-center mt-6">
+      <button
+        (click)="cambiarPagina(paginaActual - 1)"
+        [disabled]="paginaActual === 1"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+        ⬅ Anterior
+      </button>
+
+      <span class="text-sm text-gray-700 font-medium">
+        Página <strong>{{ paginaActual }}</strong> de {{ totalPaginas }}
+      </span>
+
+      <button
+        (click)="cambiarPagina(paginaActual + 1)"
+        [disabled]="paginaActual === totalPaginas"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+        Siguiente ➡
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!cargando && usuariosFiltrados.length === 0" class="text-gray-600 mt-4 text-center">
+    No hay usuarios disponibles.
+  </div>
+</div>
+
+
+<!-- Modal Formulario -->
+  <div *ngIf="mostrarFormulario" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
+      <h3 class="text-xl font-bold mb-4">{{ usuarioEditando ? 'Editar Usuario' : 'Agregar Usuario' }}</h3>
+
+      <form (ngSubmit)="guardarUsuario()" #form="ngForm" novalidate>
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700" for="nombre">Nombre</label>
+          <input id="nombre" [(ngModel)]="nuevoUsuario.nombre_completo" name="nombre" required
+                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700" for="cedula">Cédula</label>
+          <input id="cedula" [(ngModel)]="nuevoUsuario.documento" name="cedula" required
+                 class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700" for="correo">Correo</label>
+          <input id="correo" [(ngModel)]="nuevoUsuario.email" name="correo" type="email" required
+                 class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+
+        <div class="mb-3" *ngIf="!usuarioEditando">
+          <label class="block text-sm font-medium text-gray-700" for="contrasena">Contraseña</label>
+          <input id="contrasena" [(ngModel)]="nuevoUsuario.contrasena" name="contrasena" type="password" required
+                 class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700" for="rol_id">Rol</label>
+          <select id="rol_id" [(ngModel)]="nuevoUsuario.rol_id" name="rol_id"
+                  class="w-full border border-gray-300 rounded px-3 py-2">
+            <option *ngFor="let rol of roles" [value]="rol.id">{{ rol.nombre }}</option>
+          </select>
+        </div>
+        
+
+
+        <div class="mb-3">
+          <label class="block text-sm font-medium text-gray-700" for="telefono">Teléfono</label>
+          <input id="telefono" [(ngModel)]="nuevoUsuario.telefono" name="telefono"
+                 class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+
+        <div class="mb-4">
+          <label class="inline-flex items-center gap-2" for="activo">
+            <input id="activo" type="checkbox" [(ngModel)]="nuevoUsuario.activo" name="activo" class="form-checkbox" />
+            Activo
+          </label>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button type="button" (click)="cerrarFormulario()"
+                  class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg">
+            Cancelar
+          </button>
+          <button type="submit"
+                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                  [disabled]="form.invalid">
+            Guardar
+          </button>
+        </div>
+      </form>
+
+      <button (click)="cerrarFormulario()"
+              class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl leading-none font-bold">
+        &times;
+      </button>
+    </div>
+  </div>
+

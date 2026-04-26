@@ -1,0 +1,149 @@
+<aside [class]="collapsed ? 'w-16' : 'w-64'" 
+       class="bg-white/95 backdrop-blur-sm h-full shadow-lg border-r border-gray-200/50 transition-all duration-300 flex flex-col overflow-hidden">
+  
+<!-- ========== Header ========== -->
+<div class="flex items-center justify-center h-18 border-b border-blue-800 bg-blue-900 text-white relative">
+  <!-- Fondo con overlay -->
+  <div class="absolute inset-0 bg-black/10"></div>
+
+  <!-- Contenido principal -->
+  <div class="relative z-10 flex items-center gap-3 px-4">
+    
+    <!-- Logo -->
+    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-white/10">
+      <img src="images/logo_rt.png" alt="Logo" class="h-8 w-auto object-contain" />
+    </div>
+
+    <!-- Texto -->
+    <div class="flex flex-col overflow-hidden transition-all duration-300" [class.w-0]="collapsed" [class.w-auto]="!collapsed">
+      <span class="text-lg font-bold tracking-wide">ARCARIUS</span>
+      <span class="text-sm font-medium text-blue-200">{{ rolNombre }}</span>
+    </div>
+
+  </div>
+</div>
+
+  <!-- ========== Navigation ========== -->
+  <nav class="flex-1 py-6 overflow-y-auto">
+    <div class="px-3 space-y-2">
+      <ng-container *ngFor="let item of filteredNavItems(); trackBy: trackByPath">
+        <div class="relative group">
+          
+          <!-- ––– Menú Sin Hijos ––– -->
+          <button *ngIf="!item.children"
+                  [routerLink]="item.path"
+                  routerLinkActive="bg-blue-50 text-blue-700 border-blue-200"
+                  [routerLinkActiveOptions]="{ exact: item.exact || false }"
+                  (mouseenter)="onItemHover(item.path)"
+                  (mouseleave)="onItemHover(null)"
+                  class="w-full flex items-center px-3 py-2.5 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border border-transparent hover:border-gray-200 hover:shadow-sm relative">
+            
+            <!-- Icono -->
+            <div class="flex-shrink-0 w-5 h-5 mr-3 relative">
+              <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110"
+                   fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="item.icon" />
+              </svg>
+            </div>
+
+            <!-- Etiqueta -->
+            <span *ngIf="!collapsed"
+                  class="flex-1 text-left font-medium transition-all duration-300 overflow-hidden">
+              {{ item.label }}
+            </span>
+
+            <!-- Badge (según rol y ruta) -->
+            <ng-container *ngIf="item.label === 'Mesa De Ayuda' && !collapsed">
+              <!-- Admin: muestra todos los tickets -->
+              <span *ngIf="rolUsuario() === 4"
+                    class="absolute right-2 bg-red-500 text-white text-xs px-2 py-1 
+                          rounded-full font-medium animate-pulse">
+                {{ ticketsAbiertosCount() }}
+              </span>
+
+              <!-- Técnico: muestra solo en proceso -->
+              <span *ngIf="rolUsuario() === 2"
+                    class="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium animate-pulse mr-2">
+                {{ ticketsEnProcesoByTecCount() }}
+              </span>
+            </ng-container>
+
+          </button>
+
+          <!-- ––– Menú Con Hijos ––– -->
+          <div *ngIf="item.children" class="space-y-1">
+            <button (click)="toggleSubmenu(item.path)"
+                    (mouseenter)="onItemHover(item.path)"
+                    (mouseleave)="onItemHover(null)"
+                    [class]="hasActiveChild(item)
+                               ? 'bg-blue-50 text-blue-700 border-blue-200'
+                               : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border-transparent hover:border-gray-200'"
+                    class="w-full flex items-center px-3 py-2.5 rounded-lg transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border hover:shadow-sm relative">
+              
+              <!-- Icono del padre -->
+              <div class="flex-shrink-0 w-5 h-5 mr-3 relative">
+                <svg class="w-5 h-5 transition-transform duration-200 group-hover:scale-110"
+                     fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="item.icon" />
+                </svg>
+              </div>
+
+              <!-- Etiqueta padre -->
+              <span class="flex-1 text-left font-medium transition-all duration-300 overflow-hidden"
+                    [class]="collapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">
+                {{ item.label }}
+              </span>
+
+              <!-- Chevron para expandir hijos -->
+              <svg *ngIf="!collapsed"
+                   class="w-4 h-4 transition-transform duration-200"
+                   [class.rotate-90]="isSubmenuExpanded(item.path)"
+                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <!-- Lista de Hijos -->
+            <div *ngIf="isSubmenuExpanded(item.path) && !collapsed"
+                 class="ml-8 space-y-1 animate-in slide-in-from-left-2 duration-200">
+              <a *ngFor="let child of item.children"
+                 [routerLink]="child.path"
+                 routerLinkActive="bg-blue-50 text-blue-600 border-l-2 border-blue-600"
+                 class="flex items-center px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 border-l-2 border-transparent hover:border-gray-300 relative">
+                
+                <!-- Icono hijo -->
+                <svg class="w-4 h-4 mr-3 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="child.icon" />
+                </svg>
+
+                <!-- Etiqueta hijo -->
+                <span class="font-medium">{{ child.label }}</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Tooltip (colapsado) -->
+          <div *ngIf="collapsed && hoveredItem() === item.path"
+               class="absolute left-full top-1/2 transform -translate-y-1/2 ml-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-50 animate-in fade-in-0 slide-in-from-left-2 duration-200">
+            {{ item.label }}
+            <!-- Badge en tooltip -->
+            <ng-container *ngIf="item.label === 'Mesa De Ayuda'">
+              <span *ngIf="rolUsuario() === 1"
+                    class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {{ ticketsAbiertosCount() }}
+              </span>
+              <span *ngIf="rolUsuario() === 2"
+                    class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {{ ticketsEnProcesoByTecCount() }}
+              </span>
+
+              
+            </ng-container>
+            <div class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-1 w-2 h-2 bg-gray-900 rotate-45"></div>
+          </div>
+
+        </div>
+      </ng-container>
+    </div>
+  </nav>
+</aside>

@@ -1,0 +1,148 @@
+<div class="p-4 bg-white rounded-2xl shadow-xl relative">
+  <!-- Header -->
+  <h2
+    class="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-between"
+  >
+    <div class="flex items-center gap-2">
+      <svg
+        class="w-5 h-5 text-blue-500"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1 0 5.5 5.5a7.5 7.5 0 0 0 11.15 11.15z"
+        />
+      </svg>
+      Auditorías
+    </div>
+    <p class="text-sm text-gray-600">Total: {{ auditorias.length }}</p>
+  </h2>
+
+  <!-- Estados -->
+  <div
+    *ngIf="cargando"
+    class="flex items-center gap-2 text-blue-600 font-medium mb-4"
+  >
+    <span
+      class="animate-spin h-5 w-5 border-4 border-blue-300 border-t-transparent rounded-full"
+    ></span>
+    Cargando auditorías...
+  </div>
+  <div *ngIf="error" class="text-red-600 font-semibold mb-4">{{ error }}</div>
+
+  <!-- 🔍 Search -->
+  <div
+    class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6"
+  >
+    <div class="relative w-full max-w-md">
+      <div
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+      >
+        <svg
+          class="h-4 w-4 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+      <input
+        type="text"
+        placeholder="Buscar auditorías..."
+        [(ngModel)]="filtroTexto"
+        (input)="aplicarFiltro()"
+        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:shadow-lg focus:scale-105 transition-all duration-200 text-sm placeholder-gray-400"
+      />
+    </div>
+  </div>
+
+  <!-- 📋 Tabla -->
+  <div *ngIf="!cargando && auditoriasPagina.length" class="overflow-x-auto">
+    <table
+      class="w-full text-left border-collapse shadow-sm rounded-xl overflow-hidden"
+    >
+      <thead class="bg-blue-100 text-blue-800 text-sm uppercase tracking-wider">
+        <tr>
+          <th class="px-6 py-3">ID</th>
+          <th class="px-6 py-3">Descripción</th>
+          <th class="px-6 py-3">Estado</th>
+          <th class="px-6 py-3">Entidad Control</th>
+          <th class="px-6 py-3">Proyecto</th>
+          <th class="px-6 py-3">Generado Por</th>
+          <th class="px-6 py-3">Aprobado Por</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let a of auditoriasPagina"
+          class="odd:bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors duration-200"
+        >
+          <td class="px-6 py-3 font-medium text-gray-700">{{ a.id }}</td>
+          <td class="px-6 py-3 truncate max-w-xs text-gray-600">
+            {{ a.descripcion }}
+          </td>
+          <td class="px-6 py-3">
+            <span
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+              [ngClass]="{
+                'bg-green-100 text-green-800': a.estado === 'Aprobado',
+                'bg-yellow-100 text-yellow-800': a.estado === 'Pendiente',
+                'bg-red-100 text-red-800': a.estado === 'Rechazado'
+              }"
+            >
+              {{ a.estado }}
+            </span>
+          </td>
+          <td class="px-6 py-3 text-gray-600">{{ a.entidad_control }}</td>
+          <td class="px-6 py-3 text-gray-600">{{ a.proyecto.nombre }}</td>
+          <td class="px-6 py-3 text-gray-600">
+            {{ a.generadoPor.nombre_completo }}
+          </td>
+          <td class="px-6 py-3 text-gray-600">
+            {{ a.aprobadoPor.nombre_completo }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 📄 Paginación -->
+    <div class="flex justify-between items-center mt-6">
+      <button
+        (click)="cambiarPagina(paginaActual - 1)"
+        [disabled]="paginaActual === 1"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+      >
+        ⬅ Anterior
+      </button>
+
+      <span class="text-sm text-gray-700 font-medium">
+        Página <strong>{{ paginaActual }}</strong> de {{ totalPaginas }}
+      </span>
+
+      <button
+        (click)="cambiarPagina(paginaActual + 1)"
+        [disabled]="paginaActual === totalPaginas"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+      >
+        Siguiente ➡
+      </button>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!cargando && auditoriasPagina.length === 0"
+    class="text-gray-600 mt-4 text-center"
+  >
+    No hay auditorías disponibles.
+  </div>
+</div>

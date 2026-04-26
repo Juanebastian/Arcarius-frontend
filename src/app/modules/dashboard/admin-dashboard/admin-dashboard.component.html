@@ -1,0 +1,79 @@
+<div #chartsWrapper class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Usuarios por mes -->
+  <section class="bg-white rounded-2xl shadow-lg p-6 h-96">
+    <h2 class="text-lg font-semibold mb-4">📅 Usuarios registrados por mes</h2>
+    <div class="h-[80%]">
+      <canvas
+        baseChart
+        [data]="barChartData"
+        [options]="chartOptions"
+        [type]="barChartType"
+      ></canvas>
+    </div>
+  </section>
+
+  <!-- Distribución por rol -->
+  <section class="bg-white rounded-2xl shadow-lg p-6 h-96">
+    <h2 class="text-lg font-semibold mb-4">👥 Distribución por rol</h2>
+    <div class="h-[80%]">
+      <canvas
+        baseChart
+        [data]="pieChartData"
+        [options]="chartOptions"
+        [type]="pieChartType"
+      ></canvas>
+    </div>
+  </section>
+
+  <!-- Tickets por estado -->
+  <section class="bg-white rounded-2xl shadow-lg p-6 h-96">
+    <h2 class="text-lg font-semibold mb-4">🎟️ Tickets por estado</h2>
+    <div class="h-[80%]">
+      <canvas
+        baseChart
+        [data]="ticketsEstadoChartData"
+        [options]="chartOptions"
+        [type]="ticketsEstadoChartType"
+      ></canvas>
+    </div>
+  </section>
+
+  <!-- Tickets por prioridad -->
+  <section class="bg-white rounded-2xl shadow-lg p-6 h-96">
+    <h2 class="text-lg font-semibold mb-4">⚡ Tickets por prioridad</h2>
+    <div class="h-[80%]">
+      <canvas
+        baseChart
+        [data]="ticketsPrioridadChartData"
+        [options]="chartOptions"
+        [type]="ticketsPrioridadChartType"
+      ></canvas>
+    </div>
+  </section>
+
+  <!-- Tickets por usuario -->
+  <section class="bg-white rounded-2xl shadow-lg p-6 h-96">
+    <h2 class="text-lg font-semibold mb-4">🙋‍♂️ Tickets creados por usuario</h2>
+    <div class="h-[80%]">
+      <canvas
+        baseChart
+        [data]="ticketsPorUsuarioChartData"
+        [options]="chartOptions"
+        [type]="ticketsPorUsuarioChartType"
+      ></canvas>
+    </div>
+  </section>
+
+  <!-- Tickets por mes -->
+  <section class="bg-white rounded-2xl shadow-lg p-6 h-96">
+    <h2 class="text-lg font-semibold mb-4">📊 Tickets creados por mes</h2>
+    <div class="h-[80%]">
+      <canvas
+        baseChart
+        [data]="ticketsPorMesChartData"
+        [options]="chartOptions"
+        [type]="ticketsPorMesChartType"
+      ></canvas>
+    </div>
+  </section>
+</div>

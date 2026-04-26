@@ -1,0 +1,20 @@
+<div class="flex flex-col min-h-screen bg-gray-100">
+  <!-- Header y Sidebar Section -->
+  <div class="flex flex-1 overflow-hidden">
+    <app-sidebar [collapsed]="sidebarCollapsed"></app-sidebar>
+
+    <div class="flex flex-col flex-1 overflow-hidden">
+      <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+
+      <main class="flex-1 overflow-auto p-6">
+  <!-- 👇 Aquí envuelves con un div que tenga la referencia -->
+  <div #chartsWrapper class="h-full">
+    <router-outlet></router-outlet>
+  </div>
+</main>
+      
+
+      <app-footer></app-footer>
+    </div>
+  </div>
+</div>

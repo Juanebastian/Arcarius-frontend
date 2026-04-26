@@ -1,0 +1,77 @@
+/* footer.component.css */
+
+/* Animaciones personalizadas */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse {
+  animation: pulse-slow 4s ease-in-out infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Hover effects para los elementos */
+.group:hover svg {
+  transform: translateX(4px);
+}
+
+/* Gradientes personalizados */
+.bg-gradient-to-r {
+  background: linear-gradient(90deg, var(--tw-gradient-stops));
+}
+
+/* Efecto de cristal para las estadísticas */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Animación suave para los iconos sociales */
+a[title]:hover {
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+}
+
+/* Efecto de onda en el hover de los enlaces */
+.group:hover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.group:hover::before {
+  transform: scaleX(1);
+}
+
+/* Responsividad mejorada */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .grid-cols-1 {
+    gap: 2rem;
+  }
+}

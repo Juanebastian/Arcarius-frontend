@@ -1,0 +1,414 @@
+<div class="p-4 bg-white rounded-2xl shadow-xl relative">
+  <!-- Header -->
+  <h2
+    class="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-between"
+  >
+    <div class="flex items-center gap-2"> Lista de Tickets</div>
+    <div class="flex items-center gap-4">
+      <p class="text-sm text-gray-600">
+        Total de tickets: {{ tickets.length }}
+      </p>
+      <button
+        (click)="abrirFormulario()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm rounded-md transition duration-200"
+      >
+        + Nuevo Ticket
+      </button>
+    </div>
+  </h2>
+
+  <!-- 🔍 Search + Filtros -->
+  <div class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6">
+    <!-- Search -->
+    <div class="relative w-full max-w-md">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+      <input
+        type="text"
+        placeholder="Buscar tickets..."
+        [(ngModel)]="filtroTexto"
+        (input)="onFiltroChange()"
+        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm placeholder-gray-400"
+      />
+    </div>
+
+
+    <div class="flex flex-wrap gap-3">
+  <label class="inline-flex items-center gap-2">
+    <input type="checkbox"
+           (change)="onCheckboxChange($event, 'pendiente')"
+           [checked]="estadosSeleccionados.includes('pendiente')"
+           class="form-checkbox text-blue-600">
+    Pendiente
+  </label>
+
+  <label class="inline-flex items-center gap-2">
+    <input type="checkbox"
+           (change)="onCheckboxChange($event, 'en_progreso')"
+           [checked]="estadosSeleccionados.includes('en_progreso')"
+           class="form-checkbox text-blue-600">
+    En Progreso
+  </label>
+
+  <label class="inline-flex items-center gap-2">
+    <input type="checkbox"
+           (change)="onCheckboxChange($event, 'resuelto')"
+           [checked]="estadosSeleccionados.includes('resuelto')"
+           class="form-checkbox text-blue-600">
+    Resuelto
+  </label>
+
+  <label class="inline-flex items-center gap-2">
+    <input type="checkbox"
+           (change)="onCheckboxChange($event, 'cerrado')"
+           [checked]="estadosSeleccionados.includes('cerrado')"
+           class="form-checkbox text-blue-600">
+    Cerrado
+  </label>
+</div>
+
+  </div>
+
+  <!-- 📋 Tabla -->
+  <div *ngIf="!cargando && ticketsFiltrados.length" class="overflow-x-auto">
+    <table
+      class="w-full text-left border-collapse shadow-sm rounded-xl overflow-hidden"
+    >
+      <thead class="bg-blue-100 text-blue-800 text-sm uppercase tracking-wider">
+        <tr>
+          <th class="px-6 py-3">ID</th>
+          <th class="px-6 py-3">Asunto</th>
+         
+          <th class="px-6 py-3">Estado</th>
+          <th class="px-6 py-3">Prioridad</th>
+          <th class="px-6 py-3">Asignado a</th>
+          <th class="px-6 py-3">Fecha Creación</th>
+          <th class="px-6 py-3">Última Actualización</th>
+         
+          <th class="px-6 py-3 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let ticket of ticketsPagina"
+          (click)="abrirDetalleTicket(ticket)"
+          class="odd:bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors"
+        >
+          <td class="px-6 py-3">{{ ticket.id }}</td>
+          <td class="px-6 py-3 truncate max-w-xs">{{ ticket.asunto }}</td>
+         
+
+          <!-- Estado con colores -->
+          <td class="px-6 py-3">
+            <span
+              [ngClass]="{
+                'bg-yellow-100 text-yellow-800':
+                  ticket.estado?.nombre === 'pendiente',
+                'bg-blue-100 text-blue-800':
+                  ticket.estado?.nombre === 'en_progreso',
+                'bg-green-100 text-green-800':
+                  ticket.estado?.nombre === 'resuelto',
+                'bg-gray-200 text-gray-800': ticket.estado?.nombre === 'cerrado'
+              }"
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              {{ ticket.estado?.nombre }}
+            </span>
+          </td>
+          <!-- Prioridad -->
+          <td class="px-6 py-3">
+            <span
+              [ngClass]="{
+                'bg-red-100 text-red-800':
+                  ticket.prioridad?.nombre?.toLowerCase() === 'alta',
+                'bg-yellow-100 text-yellow-800':
+                  ticket.prioridad?.nombre?.toLowerCase() === 'media',
+                'bg-green-100 text-green-800':
+                  ticket.prioridad?.nombre?.toLowerCase() === 'baja',
+                'bg-gray-200 text-red-800':
+                  ticket.prioridad?.nombre?.toLowerCase() === 'critica'
+              }"
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+            >
+              {{ ticket.prioridad?.nombre || "N/A" }}
+            </span>
+          </td>
+
+          <!-- Usuario asignado -->
+          <td class="px-6 py-3">
+            {{ ticket.asignadoA?.nombre_completo || "No asignado" }}
+          </td>
+
+          <!-- Fechas -->
+          <td class="px-6 py-3">
+            {{ ticket.fecha_creacion | date : "short" }}
+          </td>
+          <td class="px-6 py-3">
+            {{ ticket.fecha_actualizacion | date : "short" }}
+          </td>
+
+          <!-- Acciones -->
+          <td class="px-6 py-3 text-center flex justify-center gap-2">
+            <button
+              (click)="abrirAsignar(ticket); $event.stopPropagation()"
+              class="text-sm bg-blue-500 hover:bg-blue-600 text-white-700 text-white px-3 py-1 rounded-lg"
+            >
+              Asignar
+            </button>
+          
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 📄 Paginación -->
+    <div class="flex justify-between items-center mt-6">
+      <button
+        (click)="cambiarPagina(paginaActual - 1)"
+        [disabled]="paginaActual === 1"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+      >
+        ⬅ Anterior
+      </button>
+      <span class="text-sm text-gray-700 font-medium">
+        Página <strong>{{ paginaActual }}</strong> de {{ totalPaginas }}
+      </span>
+      <button
+        (click)="cambiarPagina(paginaActual + 1)"
+        [disabled]="paginaActual === totalPaginas"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+      >
+        Siguiente ➡
+      </button>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!cargando && ticketsFiltrados.length === 0"
+    class="text-gray-600 mt-4 text-center"
+  >
+    No hay tickets disponibles.
+  </div>
+</div>
+
+<!-- Modal Crear / Asignar -->
+<div
+  *ngIf="mostrarFormulario"
+  class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
+>
+  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg">
+    <h3 class="text-xl font-bold mb-4">
+      {{
+        modoAsignar
+          ? "Asignar Ticket"
+          : ticketEditando
+          ? "Editar Ticket"
+          : "Nuevo Ticket"
+      }}
+    </h3>
+
+    <form (ngSubmit)="guardarTicket()" #form="ngForm" novalidate>
+      <!-- Crear / Editar -->
+      <ng-container *ngIf="!modoAsignar">
+        <div class="mb-3">
+          <label class="block text-sm">Asunto</label>
+          <input
+            [(ngModel)]="nuevoTicket.asunto"
+            name="asunto"
+            required
+            class="w-full border px-3 py-2 rounded"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="block text-sm">Descripción</label>
+          <textarea
+            [(ngModel)]="nuevoTicket.descripcion"
+            name="descripcion"
+            required
+            class="w-full border px-3 py-2 rounded"
+          ></textarea>
+        </div>
+
+        <div class="mb-3">
+          <label class="block text-sm">Prioridad</label>
+          <select
+            [(ngModel)]="nuevoTicket.prioridadId"
+            name="prioridadId"
+            required
+            class="w-full border px-3 py-2 rounded"
+          >
+            <option [ngValue]="1">Baja</option>
+            <option [ngValue]="2">Media</option>
+            <option [ngValue]="3">Alta</option>
+            <option [ngValue]="4">Crítica</option>
+          </select>
+        </div>
+      </ng-container>
+
+      <!-- Asignar -->
+      <ng-container *ngIf="modoAsignar">
+        <div class="mb-3">
+          <label class="block text-sm">Estado</label>
+          <select
+            [(ngModel)]="nuevoTicket.estadoId"
+            name="estadoId"
+            required
+            class="w-full border px-3 py-2 rounded"
+          >
+            <option [ngValue]="1" disabled>Pendiente</option>
+            <option [ngValue]="2">En Progreso</option>
+            <option [ngValue]="3">Resuelto</option>
+            <option [ngValue]="4">Cerrado</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="block text-sm">Asignar a</label>
+          <select
+            [(ngModel)]="nuevoTicket.asignadoAId"
+            name="asignadoAId"
+            required
+            class="w-full border px-3 py-2 rounded"
+          >
+            <option [ngValue]="null" disabled selected>
+              Seleccione un funcionario
+            </option>
+            <option
+              *ngFor="let usuario of usuariosFuncionarios"
+              [ngValue]="usuario.id"
+            >
+              {{ usuario.nombre_completo }}
+            </option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="block text-sm">Observaciones</label>
+          <textarea
+            [(ngModel)]="nuevoTicket.observaciones"
+            name="observaciones"
+            class="w-full border px-3 py-2 rounded"
+          ></textarea>
+        </div>
+      </ng-container>
+
+      <div class="flex justify-end gap-2 mt-4">
+        <button
+          type="button"
+          (click)="cerrarFormulario()"
+          class="bg-gray-300 px-4 py-2 rounded"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="form.invalid"
+          class="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Modal Detalle Ticket -->
+
+<div
+  *ngIf="mostrarModalDetalle"
+  class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
+>
+  <div class="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg relative">
+    <h3 class="text-xl font-bold mb-4 text-gray-800">Detalles del Ticket</h3>
+
+    <div *ngIf="ticketSeleccionado">
+      <table class="w-full border-collapse">
+        <tbody>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2 w-1/3">ID</td>
+            <td class="px-4 py-2">{{ ticketSeleccionado.id }}</td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Asunto</td>
+            <td class="px-4 py-2">{{ ticketSeleccionado.asunto }}</td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Descripción</td>
+            <td class="px-4 py-2">{{ ticketSeleccionado.descripcion }}</td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Estado</td>
+            <td class="px-4 py-2">
+              <span
+                [ngClass]="{
+                  'bg-yellow-100 text-yellow-800': ticketSeleccionado.estado?.nombre === 'pendiente',
+                  'bg-blue-100 text-blue-800': ticketSeleccionado.estado?.nombre === 'en_progreso',
+                  'bg-green-100 text-green-800': ticketSeleccionado.estado?.nombre === 'resuelto',
+                  'bg-gray-200 text-gray-800': ticketSeleccionado.estado?.nombre === 'cerrado'
+                }"
+                class="px-3 py-1 rounded-full text-xs font-semibold"
+              >
+                {{ ticketSeleccionado.estado?.nombre }}
+              </span>
+            </td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Prioridad</td>
+            <td class="px-4 py-2">
+              <span
+                [ngClass]="{
+                  'bg-red-100 text-red-800': ticketSeleccionado.prioridad?.nombre?.toLowerCase() === 'alta',
+                  'bg-yellow-100 text-yellow-800': ticketSeleccionado.prioridad?.nombre?.toLowerCase() === 'media',
+                  'bg-green-100 text-green-800': ticketSeleccionado.prioridad?.nombre?.toLowerCase() === 'baja',
+                  'bg-gray-200 text-red-800': ticketSeleccionado.prioridad?.nombre?.toLowerCase() === 'critica'
+                }"
+                class="px-3 py-1 rounded-full text-xs font-semibold"
+              >
+                {{ ticketSeleccionado.prioridad?.nombre || "N/A" }}
+              </span>
+            </td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Asignado a</td>
+            <td class="px-4 py-2">
+              {{ ticketSeleccionado.asignadoA?.nombre_completo || "No asignado" }}
+            </td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Fecha de Creación</td>
+            <td class="px-4 py-2">
+              {{ ticketSeleccionado.fecha_creacion | date:"short" }}
+            </td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Última Actualización</td>
+            <td class="px-4 py-2">
+              {{ ticketSeleccionado.fecha_actualizacion | date:"short" }}
+            </td>
+          </tr>
+          <tr class="odd:bg-gray-50 even:bg-white">
+            <td class="font-semibold px-4 py-2">Observaciones</td>
+            <td class="px-4 py-2">
+              {{ ticketSeleccionado.observaciones || "Sin observaciones" }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex justify-end mt-6">
+      <button
+        (click)="cerrarDetalleTicket()"
+        class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg"
+      >
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

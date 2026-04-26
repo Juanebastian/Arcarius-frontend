@@ -1,0 +1,266 @@
+<div class="p-4 bg-white rounded-2xl shadow-xl relative">
+  <!-- Header -->
+  <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 7h18M3 12h18M3 17h18" />
+      </svg>
+      Lista de Proyectos
+    </div>
+    <div class="flex items-center gap-4">
+      <p class="text-sm text-gray-600">
+        Total de proyectos: {{ proyectos.length }}
+      </p>
+      <button (click)="abrirFormulario()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm rounded-md transition duration-200">
+        + Nuevo Proyecto
+      </button>
+    </div>
+  </h2>
+
+  <!-- Estados -->
+  <div *ngIf="cargando" class="flex items-center gap-2 text-blue-600 font-medium">
+    <span class="animate-spin h-5 w-5 border-4 border-blue-300 border-t-transparent rounded-full"></span>
+    Cargando proyectos...
+  </div>
+  <div *ngIf="error" class="text-red-600 font-semibold mb-4">{{ error }}</div>
+
+  <!-- 🔍 Search -->
+  <div class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6">
+    <div class="relative w-full max-w-md">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </div>
+      <input 
+        type="text" 
+        placeholder="Buscar proyectos..."
+        [(ngModel)]="filtroTexto"
+        (input)="onFiltroChange()"
+        class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:shadow-lg focus:scale-105 transition-all duration-200 text-sm placeholder-gray-400">
+    </div>
+  </div>
+
+  <!-- 📋 Tabla -->
+  <div *ngIf="!cargando && proyectosFiltrados.length" class="overflow-x-auto">
+    <table class="w-full text-left border-collapse shadow-sm rounded-xl overflow-hidden">
+      <thead class="bg-blue-100 text-blue-800 text-sm uppercase tracking-wider">
+        <tr>
+          <th class="px-6 py-3">ID</th>
+          <th class="px-6 py-3">Nombre</th>
+          <th class="px-6 py-3">Descripción</th>
+          <th class="px-6 py-3">Entidad Responsable</th>
+          <th class="px-6 py-3">Fecha Inicio</th>
+          <th class="px-6 py-3">Fecha_Fin</th>
+          <th class="px-6 py-3">Presupuesto</th>
+          <th class="px-6 py-3">Estado</th>
+          <th class="px-6 py-3 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let proyecto of proyectosPagina; let i = index"
+            class="odd:bg-white even:bg-gray-50 hover:bg-blue-50 transition-colors duration-200">
+          <td class="px-6 py-3">{{ proyecto.id }}</td>
+          <td class="px-6 py-3 truncate max-w-xs">{{ proyecto.nombre }}</td>
+          <td class="px-6 py-3 truncate max-w-xs">{{ proyecto.descripcion }}</td>
+          <td class="px-6 py-3">{{ proyecto.entidadResponsable }}</td>
+          <td class="px-6 py-3">{{ proyecto.fechaInicio | date }}</td>
+          <td class="px-6 py-3">{{ proyecto.fechaFin | date }}</td>
+          <td class="px-6 py-3">{{ proyecto.presupuesto | currency:'COP':'symbol':'1.0-0' }}</td>
+          <td class="px-6 py-3">
+            <span [ngClass]="proyecto.estado === 'En ejecución' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'"
+                  class="px-3 py-1 rounded-full text-xs font-semibold">
+              {{ proyecto.estado }}
+            </span>
+          </td>
+          <td class="px-6 py-3 text-center">
+  <div class="flex flex-col md:flex-row gap-2 justify-center">
+    <button (click)="editarProyecto(proyecto)"
+            class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">
+      Editar
+    </button>
+    <button (click)="abrirFormularioGasto(proyecto)"
+        class="text-sm bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg">
+  Asignar Gasto
+</button>
+
+<button (click)="abrirModalGastos(proyecto)"
+        class="text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg">
+  Ver Gastos
+</button>
+  </div>
+</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 📄 Paginación -->
+    <div class="flex justify-between items-center mt-6">
+      <button
+        (click)="cambiarPagina(paginaActual - 1)"
+        [disabled]="paginaActual === 1"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+        ⬅ Anterior
+      </button>
+
+      <span class="text-sm text-gray-700 font-medium">
+        Página <strong>{{ paginaActual }}</strong> de {{ totalPaginas }}
+      </span>
+
+      <button
+        (click)="cambiarPagina(paginaActual + 1)"
+        [disabled]="paginaActual === totalPaginas"
+        class="px-4 text-white py-2 bg-blue-500 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition">
+        Siguiente ➡
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!cargando && proyectosFiltrados.length === 0" class="text-gray-600 mt-4 text-center">
+    No hay proyectos disponibles.
+  </div>
+</div>
+
+<!-- Modal Formulario -->
+<div *ngIf="mostrarFormulario" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
+    <h3 class="text-xl font-bold mb-4">{{ proyectoEditando ? 'Editar Proyecto' : 'Agregar Proyecto' }}</h3>
+
+    <form (ngSubmit)="guardarProyecto()" #form="ngForm" novalidate>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700" for="nombre">Nombre</label>
+        <input id="nombre" [(ngModel)]="nuevoProyecto.nombre" name="nombre" required
+               class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700" for="descripcion">Descripción</label>
+        <textarea id="descripcion" [(ngModel)]="nuevoProyecto.descripcion" name="descripcion"
+                  class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700" for="entidad">Entidad Responsable</label>
+        <input id="entidad" [(ngModel)]="nuevoProyecto.entidadResponsable" name="entidadResponsable"
+               class="w-full border border-gray-300 rounded px-3 py-2" />
+      </div>
+
+      <div class="mb-3 grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-sm font-medium text-gray-700" for="fechaInicio">Fecha Inicio</label>
+          <input type="date" id="fechaInicio" [(ngModel)]="nuevoProyecto.fechaInicio" name="fechaInicio"
+                 class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700" for="fechaFin">Fecha Fin</label>
+          <input type="date" id="fechaFin" [(ngModel)]="nuevoProyecto.fechaFin" name="fechaFin"
+                 class="w-full border border-gray-300 rounded px-3 py-2" />
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700" for="presupuesto">Presupuesto</label>
+        <input type="number" id="presupuesto" [(ngModel)]="nuevoProyecto.presupuesto" name="presupuesto"
+               class="w-full border border-gray-300 rounded px-3 py-2" />
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700" for="estado">Estado</label>
+        <select id="estado" [(ngModel)]="nuevoProyecto.estado" name="estado"
+                class="w-full border border-gray-300 rounded px-3 py-2">
+          <option value="Planeado">Planeado</option>
+          <option value="En ejecución">En ejecución</option>
+          <option value="Finalizado">Finalizado</option>
+        </select>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" (click)="cerrarFormulario()"
+                class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg">
+          Cancelar
+        </button>
+        <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                [disabled]="form.invalid">
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Modal Asignar Gasto -->
+<div *ngIf="mostrarModalGasto" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+  <div class="bg-white w-full max-w-2xl p-6 rounded-lg shadow-lg relative">
+    <h3 class="text-xl font-bold mb-4">Gastos del proyecto: {{ proyectoSeleccionado?.nombre }}</h3>
+
+    <table class="w-full text-left border-collapse shadow-sm rounded-xl overflow-hidden">
+      <thead class="bg-gray-100 text-gray-800 text-sm uppercase tracking-wider">
+        <tr>
+          <th class="px-4 py-2">Fecha</th>
+          <th class="px-4 py-2">Monto</th>
+          <th class="px-4 py-2">Descripción</th>
+          <th class="px-4 py-2">Registrado Por</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let gasto of gastosProyecto" class="odd:bg-white even:bg-gray-50">
+          <td class="px-4 py-2">{{ gasto.fecha | date }}</td>
+          <td class="px-4 py-2">{{ gasto.monto | currency:'COP':'symbol':'1.0-0' }}</td>
+          <td class="px-4 py-2">{{ gasto.descripcion }}</td>
+          <td class="px-4 py-2">{{ gasto.registradoPor?.nombre_completo }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="flex justify-end mt-4">
+      <button type="button" (click)="cerrarModalGastos()"
+              class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal Formulario Gasto -->
+<div *ngIf="mostrarFormularioGasto" class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-lg shadow-lg relative">
+    <h3 class="text-xl font-bold mb-4">Asignar gasto a {{ proyectoSeleccionado?.nombre }}</h3>
+
+    <form (ngSubmit)="guardarGasto()" #gastoForm="ngForm" novalidate>
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">Fecha</label>
+        <input type="date" [(ngModel)]="nuevoGasto.fecha" name="fecha" required
+               class="w-full border border-gray-300 rounded px-2 py-1" />
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">Monto</label>
+        <input type="number" [(ngModel)]="nuevoGasto.monto" name="monto" required
+               class="w-full border border-gray-300 rounded px-2 py-1" />
+      </div>
+
+      <div class="mb-3">
+        <label class="block text-sm font-medium text-gray-700">Descripción</label>
+        <input type="text" [(ngModel)]="nuevoGasto.descripcion" name="descripcion"
+               class="w-full border border-gray-300 rounded px-2 py-1" />
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" (click)="cerrarFormularioGasto()"
+                class="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-lg">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="gastoForm.invalid"
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
